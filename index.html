@@ -71,20 +71,28 @@ details{margin-top:12px;font-size:14px;color:var(--mut)}
 details summary{cursor:pointer;color:var(--tx)}
 details p{margin:8px 0}
 .slg{background:#241f38;border-radius:12px;padding:12px;margin-top:10px;font-size:14px}
+main{padding-bottom:96px}
+.off{display:none!important}
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;gap:6px;background:rgba(18,15,29,.95);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px max(8px,calc((100% - 520px)/2)) calc(6px + env(safe-area-inset-bottom,0px))}
+.nav a{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:7px 4px;border-radius:12px;color:var(--mut);text-decoration:none;font-size:12px}
+.nav a svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav a[aria-current=page]{color:var(--tx);background:#241f38}
+.nav a[aria-current=page] svg{stroke:var(--glow)}
+.nav a:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
 </style>
 </head>
 <body>
 <main>
-  <section class="hero">
+  <section class="hero" data-tab="home">
     <h1 id="tName">Aura AI</h1>
     <p>Token di BNB Smart Chain</p>
     <div class="big" id="tSupply">…<small id="tSym"></small></div>
     <p>total suplai</p>
   </section>
 
-  <div class="warn" id="cfgWarn" hidden>Alamat kontrak belum diisi. Buka <b>index.html</b>, cari <b>TOKEN</b> di bagian CONFIG, lalu ganti dengan alamat kontrak Aura AI (0x…).</div>
+  <div class="warn" id="cfgWarn" data-tab="home" hidden>Alamat kontrak belum diisi. Buka <b>index.html</b>, cari <b>TOKEN</b> di bagian CONFIG, lalu ganti dengan alamat kontrak Aura AI (0x…).</div>
 
-  <section class="card">
+  <section class="card" data-tab="home">
     <h2>Data token</h2>
     <div class="row"><span>Kontrak</span><span id="tAddr">-</span></div>
     <div class="row"><span>Simbol</span><span id="tSym2">-</span></div>
@@ -94,7 +102,7 @@ details p{margin:8px 0}
     <a class="btn alt" id="scanBtn" href="#" target="_blank" rel="noopener noreferrer">Lihat di BscScan</a>
   </section>
 
-  <section class="card">
+  <section class="card" data-tab="home">
     <h2>Dompet saya</h2>
     <div class="row"><span>Akun</span><span id="wAcct">Belum terhubung</span></div>
     <div class="row"><span>Saldo</span><span id="wBal">-</span></div>
@@ -104,7 +112,7 @@ details p{margin:8px 0}
     <div class="msg" id="wMsg" role="status" aria-live="polite"></div>
   </section>
 
-  <section class="card" id="sendCard" hidden>
+  <section class="card" id="sendCard" data-tab="home" hidden>
     <h2>Kirim token</h2>
     <label for="to">Alamat tujuan</label>
     <input id="to" placeholder="0x…" autocomplete="off" autocapitalize="off" spellcheck="false">
@@ -114,12 +122,19 @@ details p{margin:8px 0}
     <div class="msg" id="sMsg" role="status" aria-live="polite"></div>
   </section>
 
-  <section class="card" id="rwSoon" hidden>
-    <h2>Check-in harian &amp; staking</h2>
-    <p class="hint">Segera hadir.</p>
+  <section class="card" id="rwSoon1" data-tab="checkin" hidden>
+    <h2>Check-in harian</h2>
+    <p class="hint" style="margin-top:0"><b>Segera hadir.</b></p>
+    <p class="hint">Check-in setiap hari untuk mendapat hadiah AURA, lengkap dengan kalender dan hitungan hari beruntun.</p>
   </section>
 
-  <section class="card" id="ciCard" hidden>
+  <section class="card" id="rwSoon2" data-tab="staking" hidden>
+    <h2>Staking</h2>
+    <p class="hint" style="margin-top:0"><b>Segera hadir.</b></p>
+    <p class="hint">Stake AURA secara fleksibel atau dengan masa kunci 30, 90, dan 360 hari.</p>
+  </section>
+
+  <section class="card" id="ciCard" data-tab="checkin" hidden>
     <h2>Check-in harian</h2>
     <p class="hint" style="margin:0">Total hadiah check-in diterima</p>
     <div class="digits" id="ciDigits" aria-label="Total hadiah check-in"></div>
@@ -143,7 +158,7 @@ details p{margin:8px 0}
     <p class="hint">Satu kali per hari. Hari berganti pukul 00.00 UTC (07.00 WIB). Biaya gas dibayar dengan BNB.</p>
   </section>
 
-  <section class="card" id="stCard" hidden>
+  <section class="card" id="stCard" data-tab="staking" hidden>
     <h2>Staking</h2>
     <p class="hint" style="margin:0">Total stake saya</p>
     <div class="big2" id="stMine">-</div>
@@ -189,6 +204,11 @@ details p{margin:8px 0}
 
   <p class="foot">Transaksi blockchain tidak bisa dibatalkan. Periksa alamat tujuan sebelum mengirim.</p>
 </main>
+<nav class="nav" aria-label="Menu utama">
+  <a href="#home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Beranda</a>
+  <a href="#checkin"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18M9 15l2 2 4-4"/></svg>Check-in</a>
+  <a href="#staking"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Staking</a>
+</nav>
 
 <script>
 /* ===== CONFIG ===== */
@@ -377,7 +397,7 @@ function errText(e) {
   const r = m.match(/execution reverted:?\s*([^"\n]*)/i);
   return (r && r[1] ? r[1] : m).slice(0, 160);
 }
-function need(m) { if (acct) return true; say(m, "Hubungkan dompet dulu.", "er"); return false; }
+function need(m) { if (acct) return true; say(m, "Hubungkan dompet dulu di menu Beranda.", "er"); return false; }
 
 async function txSend(to, data, m, label) {
   await ensureChain();
@@ -439,7 +459,7 @@ function renderCal() {
 function leftText(sec) { const m = Math.max(0, Math.floor(sec / 60)); return Math.floor(m / 60) + " jam " + (m % 60) + " menit"; }
 function updateCiBtn() {
   const b = $("ciBtn");
-  if (!acct) { b.disabled = false; b.textContent = "Check-in hari ini"; $("ciStatus").textContent = "Hubungkan dompet untuk check-in."; return; }
+  if (!acct) { b.disabled = false; b.textContent = "Check-in hari ini"; $("ciStatus").textContent = "Hubungkan dompet di menu Beranda untuk check-in."; return; }
   if (!rw.can) { b.disabled = true; b.textContent = "Check-in hari ini selesai"; $("ciStatus").textContent = "Check-in berikutnya dalam " + leftText(rw.nextAt - Date.now() / 1000) + "."; return; }
   $("ciStatus").textContent = "";
   b.textContent = "Check-in hari ini";
@@ -467,7 +487,7 @@ function renderLocks(items) {
 }
 
 async function loadRewards() {
-  if (!RW_OK) { $("rwSoon").hidden = false; return; }
+  if (!RW_OK) { $("rwSoon1").hidden = false; $("rwSoon2").hidden = false; return; }
   $("ciCard").hidden = false; $("stCard").hidden = false;
   try {
     const calls = [ec(R, "0x" + SEL.flexApyBps), ec(R, "0x" + SEL.plans + u256(0)), ec(R, "0x" + SEL.plans + u256(1)), ec(R, "0x" + SEL.plans + u256(2)),
@@ -616,6 +636,20 @@ if (ethereum) {
 }
 loadToken();
 loadRewards();
+
+/* ===== Menu bawah ===== */
+const TABS = ["home", "checkin", "staking"];
+function showTab() {
+  let t = (location.hash || "#home").slice(1);
+  if (!TABS.includes(t)) t = "home";
+  document.querySelectorAll("[data-tab]").forEach(e => e.classList.toggle("off", e.dataset.tab !== t));
+  document.querySelectorAll(".nav a").forEach(a => {
+    if (a.getAttribute("href") === "#" + t) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current");
+  });
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", showTab);
+showTab();
 </script>
 </body>
 </html>
