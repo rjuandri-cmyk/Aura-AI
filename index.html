@@ -87,7 +87,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 /* ===== CONFIG ===== */
 const CFG = {
   TOKEN: "0xa290cb07d40df6c9da3f7a978c6db29623dda9cd", // kontrak Aura AI (BSC)
-  RPC: ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io"],
+  RPC: ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io", "https://bsc-dataseed1.ninicoin.io", "https://bsc.publicnode.com", "https://rpc.ankr.com/bsc"],
   EXPLORER: "https://bscscan.com"
 };
 /* ================== */
@@ -97,14 +97,18 @@ const tk = { name: "Aura AI", symbol: "AURA", dec: 18, supply: 0n };
 let acct = "", bal = 0n;
 
 const pad = h => h.replace(/^0x/, "").toLowerCase().padStart(64, "0");
-const ethereum = window.ethereum;
+const ethereum = window.ethereum || window.trustwallet || null;
 
 async function rpc(method, params) {
   let last;
   for (const u of CFG.RPC) {
     try {
-      const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+      const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 4000);
+      let r;
+      try {
+        r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
+          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+      } finally { clearTimeout(timer); }
       const j = await r.json();
       if (j.error) throw new Error(j.error.message);
       return j.result;
@@ -169,6 +173,7 @@ async function refreshBal() {
 }
 
 async function ensureChain() {
+  try { if ((await ethereum.request({ method: "eth_chainId" })) === "0x38") return; } catch (e) {}
   try { await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x38" }] }); }
   catch (e) {
     if (e.code !== 4902) throw e;
@@ -179,15 +184,25 @@ async function ensureChain() {
 
 async function connect() {
   if (!OK) return say($("wMsg"), "Alamat kontrak belum diisi.", "er");
+  const btn = $("connBtn");
+  btn.disabled = true; say($("wMsg"), "Menunggu persetujuan di dompet Anda…");
   try {
     const a = await ethereum.request({ method: "eth_requestAccounts" });
-    await ensureChain();
+    if (!a || !a[0]) throw new Error("Tidak ada akun yang dipilih di dompet.");
     acct = a[0];
     $("wAcct").textContent = short(acct);
     $("connBtn").hidden = true; $("addBtn").hidden = false; $("sendCard").hidden = false;
-    say($("wMsg"), "Terhubung ke BNB Smart Chain.", "ok");
+    let chainOk = true;
+    try { await ensureChain(); } catch (e) { chainOk = false; }
+    say($("wMsg"), chainOk ? "Terhubung ke BNB Smart Chain." : "Terhubung, tetapi jaringan belum BNB Smart Chain. Ganti jaringan di dompet Anda ke BNB Smart Chain (chain ID 56).", chainOk ? "ok" : "er");
     refreshBal();
-  } catch (e) { say($("wMsg"), e.code === 4001 ? "Koneksi dibatalkan." : "Gagal menghubungkan dompet.", "er"); }
+  } catch (e) {
+    const m = e.code === 4001 ? "Koneksi dibatalkan di dompet."
+      : e.code === -32002 ? "Permintaan sudah terbuka di dompet. Buka aplikasi dompet dan setujui atau tutup dulu."
+      : "Gagal menghubungkan dompet: " + (e.message || "kesalahan tidak diketahui");
+    say($("wMsg"), m, "er");
+  }
+  btn.disabled = false;
 }
 
 async function send() {
@@ -227,9 +242,13 @@ if (ethereum) {
   ethereum.on && ethereum.on("accountsChanged", () => location.reload());
   ethereum.on && ethereum.on("chainChanged", () => location.reload());
 } else {
-  $("connBtn").onclick = () => say($("wMsg"), "Dompet tidak terdeteksi. Buka halaman ini lewat browser di dalam aplikasi MetaMask atau Trust Wallet.", "er");
+  $("connBtn").onclick = () => say($("wMsg"), "Dompet tidak terdeteksi. Buka halaman ini lewat browser di dalam aplikasi MetaMask atau Trust Wallet, atau ketuk tombol di bawah.", "er");
   $("mmLink").hidden = false;
   $("mmLink").href = "https://metamask.app.link/dapp/" + location.host + location.pathname;
+  const tw = $("mmLink").cloneNode(true);
+  tw.id = "twLink"; tw.textContent = "Buka di Trust Wallet";
+  tw.href = "https://link.trustwallet.com/open_url?coin_id=20000714&url=" + encodeURIComponent(location.href);
+  $("mmLink").after(tw);
 }
 loadToken();
 </script>
