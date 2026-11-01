@@ -37,6 +37,40 @@ button:disabled{opacity:.5;cursor:not-allowed}
 [hidden]{display:none!important}
 .foot{margin-top:24px;text-align:center;color:var(--mut);font-size:13px}
 @media (prefers-reduced-motion:no-preference){button{transition:filter .15s}button:hover:not(:disabled){filter:brightness(1.1)}}
+select{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:#120f1d;color:var(--tx);font-size:16px}
+select:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+.hint{margin:10px 0 0;color:var(--mut);font-size:13px}
+.sub{margin:18px 0 6px;font-size:15px}
+.btns{display:flex;gap:8px}.btns button{margin-top:12px}
+.pos{border-top:1px solid var(--line);padding:12px 0}
+.pos:first-child{border-top:0}
+.pos b{font-weight:600}.pos small{display:block;color:var(--mut)}
+.pos button{margin-top:8px;padding:10px}
+.cta{background:linear-gradient(90deg,#3fe0c8,#3b7bff);color:#06121f;font-size:17px;padding:15px}
+.cta:disabled{background:transparent;color:var(--mut);border:1px solid var(--line)}
+.digits{display:flex;flex-wrap:wrap;gap:4px;align-items:flex-end;margin:6px 0 10px}
+.dg{min-width:22px;padding:7px 4px;border-radius:8px;background:#000;color:#fff;font:600 22px/1 Georgia,serif;text-align:center}
+.dot{font:600 22px/1 Georgia,serif;color:var(--mut)}
+.week{display:flex;gap:6px;margin:14px 0 4px}
+.wd{flex:1;padding:12px 0;border-radius:10px;background:#241f38;color:var(--mut);text-align:center;font-weight:600}
+.wd.on{background:#1a73ff;color:#fff}
+.today{outline:2px solid var(--glow);outline-offset:-2px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal span{padding:9px 0;border-radius:8px;font-size:14px}
+.cal .h{color:var(--mut);font-size:12px;padding:4px 0}
+.cal .on{background:#1a73ff;color:#fff}
+.calhead{display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px;font-weight:600}
+.calhead button{width:auto;margin:0;padding:6px 14px}
+.tiles{display:flex;gap:10px;margin:12px 0}
+.tile{flex:1;background:#241f38;border-radius:14px;padding:12px}
+.tile small{display:block;color:var(--mut);font-size:13px}
+.tile b{display:block;font:600 28px/1.25 Georgia,serif;color:var(--glow)}
+.tile span{color:var(--mut);font-size:12px}
+.big2{font:600 30px/1.2 Georgia,serif;margin:2px 0 4px;word-break:break-all}
+details{margin-top:12px;font-size:14px;color:var(--mut)}
+details summary{cursor:pointer;color:var(--tx)}
+details p{margin:8px 0}
+.slg{background:#241f38;border-radius:12px;padding:12px;margin-top:10px;font-size:14px}
 </style>
 </head>
 <body>
@@ -80,6 +114,79 @@ button:disabled{opacity:.5;cursor:not-allowed}
     <div class="msg" id="sMsg" role="status" aria-live="polite"></div>
   </section>
 
+  <section class="card" id="rwSoon" hidden>
+    <h2>Check-in harian &amp; staking</h2>
+    <p class="hint">Segera hadir.</p>
+  </section>
+
+  <section class="card" id="ciCard" hidden>
+    <h2>Check-in harian</h2>
+    <p class="hint" style="margin:0">Total hadiah check-in diterima</p>
+    <div class="digits" id="ciDigits" aria-label="Total hadiah check-in"></div>
+    <div class="row"><span>Check-in beruntun</span><span id="ciStreak">-</span></div>
+    <div class="row"><span>Total check-in</span><span id="ciTotal">-</span></div>
+    <div class="row"><span>Hadiah per check-in</span><span id="ciRew">-</span></div>
+    <div class="week" id="ciWeek"></div>
+    <div class="slg" id="ciSloganBox" hidden>
+      <div>Ketik slogan berikut untuk check-in:</div>
+      <p id="ciSloganText" style="margin:6px 0 10px;color:var(--tx)"></p>
+      <input id="ciSlogan" placeholder="Ketik slogan di sini" autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <button class="cta" id="ciBtn" type="button">Check-in hari ini</button>
+    <div class="msg" id="ciStatus"></div>
+    <div class="msg" id="ciMsg" role="status" aria-live="polite"></div>
+    <button class="alt" id="calToggle" type="button">Lihat kalender</button>
+    <div id="calBox" hidden>
+      <div class="calhead"><button class="alt" id="calPrev" type="button">‹</button><span id="calTitle"></span><button class="alt" id="calNext" type="button">›</button></div>
+      <div class="cal" id="ciCal"></div>
+    </div>
+    <p class="hint">Satu kali per hari. Hari berganti pukul 00.00 UTC (07.00 WIB). Biaya gas dibayar dengan BNB.</p>
+  </section>
+
+  <section class="card" id="stCard" hidden>
+    <h2>Staking</h2>
+    <p class="hint" style="margin:0">Total stake saya</p>
+    <div class="big2" id="stMine">-</div>
+    <div class="row"><span>Hadiah yang bisa diklaim</span><span id="flPend">-</span></div>
+    <div class="tiles">
+      <div class="tile"><small>Fleksibel</small><b id="apyF">-</b><span>APY</span></div>
+      <div class="tile"><small>Kunci</small><b id="apyMax">-</b><span>APY maksimum</span></div>
+    </div>
+    <div class="row"><span>Kunci 30 hari</span><span id="apy0">-</span></div>
+    <div class="row"><span>Kunci 90 hari</span><span id="apy1">-</span></div>
+    <div class="row"><span>Kunci 360 hari</span><span id="apy2">-</span></div>
+    <details>
+      <summary>Cara kerja staking</summary>
+      <p><b>Fleksibel:</b> hadiah mengalir setiap detik. Klaim hadiah dan tarik stake kapan saja, tanpa masa kunci.</p>
+      <p><b>Kunci:</b> pilih 30, 90, atau 360 hari. Hadiah dikunci di muka dari pool dan dibayar bersama dana pokok setelah masa kunci selesai. Tidak bisa ditarik lebih awal.</p>
+      <p>APY dibayar dari pool hadiah dan bisa diubah pengelola untuk stake baru.</p>
+    </details>
+
+    <h3 class="sub">Stake AURA</h3>
+    <label for="stPlan">Paket</label>
+    <select id="stPlan">
+      <option value="f">Fleksibel</option>
+      <option value="0">Kunci 30 hari</option>
+      <option value="1">Kunci 90 hari</option>
+      <option value="2">Kunci 360 hari</option>
+    </select>
+    <label for="stAmt">Jumlah</label>
+    <div class="amt"><input id="stAmt" inputmode="decimal" placeholder="0.0" autocomplete="off"><button class="alt" id="stMax" type="button">Maks</button></div>
+    <button class="cta" id="stBtn" type="button">Stake</button>
+
+    <h3 class="sub">Stake fleksibel saya</h3>
+    <div class="row"><span>Di-stake</span><span id="flAmt">-</span></div>
+    <div class="btns"><button class="alt" id="flClaim" type="button">Klaim hadiah</button><button class="alt" id="flOut" type="button">Tarik semua</button></div>
+
+    <h3 class="sub">Stake kunci saya</h3>
+    <div id="lkList"><p class="hint">Hubungkan dompet untuk melihat stake Anda.</p></div>
+
+    <div class="row" style="margin-top:14px"><span>Total di-stake (semua)</span><span id="stTotal">-</span></div>
+    <div class="row"><span>Sisa pool hadiah</span><span id="stPool">-</span></div>
+    <div class="msg" id="stMsg" role="status" aria-live="polite"></div>
+    <p class="hint">Staking memakai kontrak pintar dan memiliki risiko. Periksa kontrak di BscScan sebelum menyetor dana.</p>
+  </section>
+
   <p class="foot">Transaksi blockchain tidak bisa dibatalkan. Periksa alamat tujuan sebelum mengirim.</p>
 </main>
 
@@ -88,7 +195,9 @@ button:disabled{opacity:.5;cursor:not-allowed}
 const CFG = {
   TOKEN: "0xa290cb07d40df6c9da3f7a978c6db29623dda9cd", // kontrak Aura AI (BSC)
   RPC: ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io", "https://bsc-dataseed1.ninicoin.io", "https://bsc.publicnode.com", "https://rpc.ankr.com/bsc"],
-  EXPLORER: "https://bscscan.com"
+  EXPLORER: "https://bscscan.com",
+  REWARDS: "", // alamat kontrak AuraRewards (isi setelah deploy, format 0x…)
+  SLOGAN: "" // opsional: slogan yang harus diketik sebelum check-in (kosongkan untuk menonaktifkan)
 };
 /* ================== */
 const $ = id => document.getElementById(id);
@@ -216,7 +325,7 @@ async function connect() {
     let chainOk = true;
     try { await ensureChain(); } catch (e) { chainOk = false; }
     say($("wMsg"), chainOk ? "Terhubung ke BNB Smart Chain." : "Terhubung, tetapi jaringan belum BNB Smart Chain. Ganti jaringan di dompet Anda ke BNB Smart Chain (chain ID 56).", chainOk ? "ok" : "er");
-    refreshBal();
+    refreshBal(); loadRewards();
   } catch (e) {
     const m = e.code === 4001 ? "Koneksi dibatalkan di dompet."
       : e.code === -32002 ? "Permintaan sudah terbuka di dompet. Buka aplikasi dompet dan setujui atau tutup dulu."
@@ -245,6 +354,232 @@ async function send() {
   $("sendBtn").disabled = false;
 }
 
+/* ===== Check-in & Staking ===== */
+const R = CFG.REWARDS;
+const RW_OK = /^0x[0-9a-fA-F]{40}$/.test(R);
+const SLOGAN = (CFG.SLOGAN || "").trim();
+const SEL = { approve: "095ea7b3", allowance: "dd62ed3e", checkIn: "183ff085", checkInInfo: "e8c55629", checkInExtra: "8c7f03f8",
+  stakeFlexible: "542eb745", unstakeFlexible: "74567967", claimFlexible: "9abe34d5", flexInfo: "7d23e73c", flexApyBps: "510d2274",
+  stakeLocked: "ba14c31e", withdrawLocked: "32d342b7", stakeCount: "33060d90", stakes: "584b62a1", plans: "b1620616",
+  checkInReward: "b2b8fbe7", totalStaked: "817b1cd2", freeReserve: "807ba2e0" };
+const word = (h, i) => BigInt("0x" + h.slice(2 + i * 64, 66 + i * 64));
+const u256 = v => BigInt(v).toString(16).padStart(64, "0");
+const ec = (to, data) => ({ method: "eth_call", params: [{ to, data }, "latest"] });
+const pct = b => (Number(b) / 100).toString().replace(".", ",") + "%";
+const YEAR_S = 365n * 86400n, DAY = 86400;
+const PLAN_LBL = ["30 hari", "90 hari", "360 hari"];
+const rw = { apy: [0n, 0n, 0n], dur: [30n * 86400n, 90n * 86400n, 360n * 86400n], on: [true, true, true], flexApy: 0n, pool: 0n,
+  nextAt: 0, can: false, L: 0n, hist: 0n, earned: 0n, flexAmt: 0n };
+
+function errText(e) {
+  if (e && e.code === 4001) return "Dibatalkan di dompet.";
+  const m = String((e && (e.message || e.reason)) || "Gagal.");
+  const r = m.match(/execution reverted:?\s*([^"\n]*)/i);
+  return (r && r[1] ? r[1] : m).slice(0, 160);
+}
+function need(m) { if (acct) return true; say(m, "Hubungkan dompet dulu.", "er"); return false; }
+
+async function txSend(to, data, m, label) {
+  await ensureChain();
+  say(m, (label ? label + " " : "") + "Konfirmasi di dompet Anda…");
+  const hash = await ethereum.request({ method: "eth_sendTransaction", params: [{ from: acct, to, data }] });
+  say(m, "Menunggu konfirmasi jaringan…", "", CFG.EXPLORER + "/tx/" + hash);
+  for (let i = 0; i < 60; i++) {
+    await new Promise(r => setTimeout(r, 3000));
+    let rc = null;
+    try { rc = await rpc("eth_getTransactionReceipt", [hash]); } catch (e) {}
+    if (rc) {
+      if (rc.status === "0x1") return hash;
+      throw new Error("Transaksi ditolak kontrak. Cek detail di BscScan.");
+    }
+  }
+  throw new Error("Konfirmasi belum terlihat. Cek status di BscScan, lalu muat ulang halaman.");
+}
+
+/* ---- Check-in: tampilan ---- */
+const todayIdx = () => Math.floor(Date.now() / 1000 / DAY);
+const wasChecked = d => {
+  if (!acct || rw.L === 0n) return false;
+  const bit = rw.L - 1n - BigInt(d);
+  return bit >= 0n && bit < 256n && ((rw.hist >> bit) & 1n) === 1n;
+};
+function digits(v) {
+  const box = $("ciDigits"); box.textContent = "";
+  if (v === null) return;
+  const parts = fmt(v, tk.dec, true).split(".");
+  const t = parts[0] + "." + ((parts[1] || "") + "00").slice(0, Math.max(2, Math.min((parts[1] || "").length, 4)));
+  for (const ch of t) {
+    const sp = document.createElement("span");
+    sp.className = ch === "." ? "dot" : "dg"; sp.textContent = ch; box.append(sp);
+  }
+}
+function renderWeek() {
+  const box = $("ciWeek"); box.textContent = ""; const T = todayIdx();
+  for (let d = T - 4; d <= T + 2; d++) {
+    const el = document.createElement("span");
+    el.className = "wd" + (wasChecked(d) ? " on" : "") + (d === T ? " today" : "");
+    el.textContent = String(new Date(d * DAY * 1000).getUTCDate());
+    box.append(el);
+  }
+}
+let calY, calM;
+function renderCal() {
+  const box = $("ciCal"); box.textContent = "";
+  if (calY === undefined) { const n = new Date(); calY = n.getUTCFullYear(); calM = n.getUTCMonth(); }
+  const first = Date.UTC(calY, calM, 1);
+  $("calTitle").textContent = new Date(first).toLocaleDateString("id-ID", { month: "long", year: "numeric", timeZone: "UTC" });
+  ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"].forEach(n => { const h = document.createElement("span"); h.className = "h"; h.textContent = n; box.append(h); });
+  const lead = (new Date(first).getUTCDay() + 6) % 7, dim = new Date(Date.UTC(calY, calM + 1, 0)).getUTCDate(), T = todayIdx();
+  for (let i = 0; i < lead; i++) box.append(document.createElement("span"));
+  for (let day = 1; day <= dim; day++) {
+    const d = Math.floor(first / 1000 / DAY) + day - 1, el = document.createElement("span");
+    el.className = (wasChecked(d) ? "on" : "") + (d === T ? " today" : ""); el.textContent = String(day); box.append(el);
+  }
+}
+function leftText(sec) { const m = Math.max(0, Math.floor(sec / 60)); return Math.floor(m / 60) + " jam " + (m % 60) + " menit"; }
+function updateCiBtn() {
+  const b = $("ciBtn");
+  if (!acct) { b.disabled = false; b.textContent = "Check-in hari ini"; $("ciStatus").textContent = "Hubungkan dompet untuk check-in."; return; }
+  if (!rw.can) { b.disabled = true; b.textContent = "Check-in hari ini selesai"; $("ciStatus").textContent = "Check-in berikutnya dalam " + leftText(rw.nextAt - Date.now() / 1000) + "."; return; }
+  $("ciStatus").textContent = "";
+  b.textContent = "Check-in hari ini";
+  b.disabled = !!SLOGAN && $("ciSlogan").value.trim() !== SLOGAN;
+}
+setInterval(() => { if (acct && !rw.can && rw.nextAt) updateCiBtn(); }, 30000);
+
+function renderLocks(items) {
+  const box = $("lkList"); box.textContent = "";
+  if (!items.length) { const p = document.createElement("p"); p.className = "hint"; p.textContent = "Belum ada stake kunci."; box.append(p); return; }
+  const now = Date.now() / 1000;
+  items.forEach(it => {
+    const d = document.createElement("div"); d.className = "pos";
+    const b = document.createElement("b"); b.textContent = fmt(it.amount, tk.dec) + " " + tk.symbol + " · " + PLAN_LBL[it.plan];
+    const sm = document.createElement("small");
+    const end = new Date(Number(it.end) * 1000);
+    sm.textContent = "Hadiah +" + fmt(it.reward, tk.dec) + " " + tk.symbol + " · cair " + end.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" });
+    d.append(b, sm);
+    const btn = document.createElement("button"); btn.type = "button"; btn.className = "alt";
+    if (it.closed) { btn.textContent = "Sudah ditarik"; btn.disabled = true; }
+    else if (now < Number(it.end)) { btn.textContent = "Terkunci"; btn.disabled = true; }
+    else { btn.textContent = "Tarik dana + hadiah"; btn.className = ""; btn.onclick = () => doWithdraw(it.i); }
+    d.append(btn); box.append(d);
+  });
+}
+
+async function loadRewards() {
+  if (!RW_OK) { $("rwSoon").hidden = false; return; }
+  $("ciCard").hidden = false; $("stCard").hidden = false;
+  try {
+    const calls = [ec(R, "0x" + SEL.flexApyBps), ec(R, "0x" + SEL.plans + u256(0)), ec(R, "0x" + SEL.plans + u256(1)), ec(R, "0x" + SEL.plans + u256(2)),
+      ec(R, "0x" + SEL.checkInReward), ec(R, "0x" + SEL.totalStaked), ec(R, "0x" + SEL.freeReserve)];
+    if (acct) calls.push(ec(R, "0x" + SEL.checkInInfo + pad(acct)), ec(R, "0x" + SEL.flexInfo + pad(acct)), ec(R, "0x" + SEL.stakeCount + pad(acct)), ec(R, "0x" + SEL.checkInExtra + pad(acct)));
+    const r = await rpcBatch(calls);
+    if (r.slice(0, 7).some(x => x.error || !x.result || x.result === "0x")) throw new Error("kontrak tidak terbaca");
+    rw.flexApy = word(r[0].result, 0);
+    let top = 0n;
+    for (let i = 0; i < 3; i++) {
+      rw.dur[i] = word(r[1 + i].result, 0); rw.apy[i] = word(r[1 + i].result, 1); rw.on[i] = word(r[1 + i].result, 2) === 1n;
+      if (rw.on[i] && rw.apy[i] > top) top = rw.apy[i];
+    }
+    rw.pool = word(r[6].result, 0);
+    $("ciRew").textContent = fmt(word(r[4].result, 0), tk.dec) + " " + tk.symbol;
+    $("stTotal").textContent = fmt(word(r[5].result, 0), tk.dec) + " " + tk.symbol;
+    $("stPool").textContent = fmt(rw.pool, tk.dec) + " " + tk.symbol;
+    $("apyF").textContent = pct(rw.flexApy); $("apyMax").textContent = pct(top);
+    const opts = $("stPlan").options;
+    opts[0].textContent = "Fleksibel (" + pct(rw.flexApy) + ")";
+    for (let i = 0; i < 3; i++) {
+      $("apy" + i).textContent = rw.on[i] ? pct(rw.apy[i]) + " / tahun" : "Nonaktif";
+      opts[i + 1].textContent = "Kunci " + PLAN_LBL[i] + (rw.on[i] ? " (" + pct(rw.apy[i]) + ")" : " (nonaktif)");
+      opts[i + 1].disabled = !rw.on[i];
+    }
+    if (!acct) {
+      rw.L = 0n; rw.hist = 0n; rw.earned = 0n; rw.can = false; rw.nextAt = 0; rw.flexAmt = 0n;
+      $("ciStreak").textContent = "-"; $("ciTotal").textContent = "-"; digits(null);
+      $("flAmt").textContent = "-"; $("flPend").textContent = "-"; $("stMine").textContent = "-";
+      renderWeek(); renderCal(); updateCiBtn();
+      return;
+    }
+    const ci = r[7].result, fl = r[8].result, n = Number(word(r[9].result, 0)), ex = r[10].result;
+    rw.L = word(ci, 0); rw.can = word(ci, 3) === 1n; rw.nextAt = Number(word(ci, 4));
+    rw.hist = word(ex, 0); rw.earned = word(ex, 1);
+    $("ciStreak").textContent = word(ci, 1) + " hari"; $("ciTotal").textContent = word(ci, 2).toString();
+    digits(rw.earned); renderWeek(); renderCal(); updateCiBtn();
+    rw.flexAmt = word(fl, 0);
+    $("flAmt").textContent = fmt(rw.flexAmt, tk.dec) + " " + tk.symbol;
+    $("flPend").textContent = fmt(word(fl, 1), tk.dec, true).replace(/(\.\d{6})\d+$/, "$1") + " " + tk.symbol;
+    let mine = rw.flexAmt;
+    if (n === 0) { renderLocks([]); $("stMine").textContent = fmt(mine, tk.dec) + " " + tk.symbol; return; }
+    const count = Math.min(n, 30), start = n - count, sc = [];
+    for (let i = start; i < n; i++) sc.push(ec(R, "0x" + SEL.stakes + pad(acct) + u256(i)));
+    const sr = await rpcBatch(sc);
+    const items = sr.map((x, k) => x.error || !x.result ? null : ({ i: start + k, amount: word(x.result, 0), reward: word(x.result, 1),
+      end: word(x.result, 3), plan: Number(word(x.result, 4)), closed: word(x.result, 5) === 1n })).filter(Boolean).reverse();
+    items.forEach(it => { if (!it.closed) mine += it.amount; });
+    $("stMine").textContent = fmt(mine, tk.dec) + " " + tk.symbol;
+    renderLocks(items);
+  } catch (e) {
+    $("stTotal").textContent = "Gagal memuat"; setTimeout(loadRewards, 6000);
+  }
+}
+
+async function doCheckIn() {
+  const m = $("ciMsg"); if (!need(m)) return;
+  $("ciBtn").disabled = true;
+  try { await txSend(R, "0x" + SEL.checkIn, m); say(m, "Check-in berhasil. Hadiah masuk ke dompet Anda.", "ok"); refreshBal(); }
+  catch (e) { say(m, errText(e), "er"); }
+  await loadRewards();
+}
+async function doStake() {
+  const m = $("stMsg"); if (!need(m)) return;
+  $("stBtn").disabled = true;
+  try {
+    const v = parse($("stAmt").value, tk.dec);
+    if (v <= 0n) throw new Error("Jumlah harus lebih dari 0.");
+    if (v > bal) throw new Error("Saldo AURA tidak cukup.");
+    const plan = $("stPlan").value;
+    if (plan !== "f") {
+      const k = Number(plan);
+      if ((v * rw.apy[k] * rw.dur[k]) / (YEAR_S * 10000n) > rw.pool) throw new Error("Pool hadiah belum cukup untuk paket ini. Coba jumlah lebih kecil.");
+    }
+    const al = word(await rpc("eth_call", [{ to: CFG.TOKEN, data: "0x" + SEL.allowance + pad(acct) + pad(R) }, "latest"]), 0);
+    if (al < v) await txSend(CFG.TOKEN, "0x" + SEL.approve + pad(R) + u256(v), m, "Langkah 1/2 (izin AURA):");
+    const data = plan === "f" ? "0x" + SEL.stakeFlexible + u256(v) : "0x" + SEL.stakeLocked + u256(plan) + u256(v);
+    await txSend(R, data, m, al < v ? "Langkah 2/2 (stake):" : "");
+    say(m, "Stake berhasil.", "ok"); $("stAmt").value = ""; refreshBal();
+  } catch (e) { say(m, errText(e), "er"); }
+  $("stBtn").disabled = false;
+  await loadRewards();
+}
+async function doFlexOut() {
+  const m = $("stMsg"); if (!need(m)) return;
+  try {
+    if (!rw.flexAmt || rw.flexAmt <= 0n) throw new Error("Tidak ada stake fleksibel.");
+    await txSend(R, "0x" + SEL.unstakeFlexible + u256(rw.flexAmt), m);
+    say(m, "Penarikan berhasil.", "ok"); refreshBal();
+  } catch (e) { say(m, errText(e), "er"); }
+  await loadRewards();
+}
+async function doFlexClaim() {
+  const m = $("stMsg"); if (!need(m)) return;
+  try { await txSend(R, "0x" + SEL.claimFlexible, m); say(m, "Hadiah diklaim.", "ok"); refreshBal(); }
+  catch (e) { say(m, errText(e), "er"); }
+  await loadRewards();
+}
+async function doWithdraw(i) {
+  const m = $("stMsg"); if (!need(m)) return;
+  try { await txSend(R, "0x" + SEL.withdrawLocked + u256(i), m); say(m, "Dana dan hadiah sudah ditarik.", "ok"); refreshBal(); }
+  catch (e) { say(m, errText(e), "er"); }
+  await loadRewards();
+}
+$("ciBtn").onclick = doCheckIn; $("stBtn").onclick = doStake;
+$("flOut").onclick = doFlexOut; $("flClaim").onclick = doFlexClaim;
+$("stMax").onclick = () => { $("stAmt").value = fmt(bal, tk.dec, true); };
+$("calToggle").onclick = () => { const h = $("calBox").hidden; $("calBox").hidden = !h; $("calToggle").textContent = h ? "Sembunyikan kalender" : "Lihat kalender"; };
+$("calPrev").onclick = () => { calM--; if (calM < 0) { calM = 11; calY--; } renderCal(); };
+$("calNext").onclick = () => { calM++; if (calM > 11) { calM = 0; calY++; } renderCal(); };
+if (SLOGAN) { $("ciSloganBox").hidden = false; $("ciSloganText").textContent = SLOGAN; $("ciSlogan").oninput = updateCiBtn; }
+
 $("copyBtn").onclick = async () => {
   if (!OK) return;
   try { await navigator.clipboard.writeText(CFG.TOKEN); $("copyBtn").textContent = "Tersalin ✓"; }
@@ -266,7 +601,8 @@ if (ethereum) {
       acct = ""; bal = 0n;
       $("wAcct").textContent = "Belum terhubung"; $("wBal").textContent = "-";
       $("connBtn").hidden = false; $("addBtn").hidden = true; $("sendCard").hidden = true;
-    } else { acct = a[0]; $("wAcct").textContent = short(acct); refreshBal(); }
+      renderLocks([]); loadRewards();
+    } else { acct = a[0]; $("wAcct").textContent = short(acct); refreshBal(); loadRewards(); }
   });
   ethereum.on && ethereum.on("chainChanged", () => { if (acct) refreshBal(); });
 } else {
@@ -279,6 +615,7 @@ if (ethereum) {
   $("mmLink").after(tw);
 }
 loadToken();
+loadRewards();
 </script>
 </body>
 </html>
