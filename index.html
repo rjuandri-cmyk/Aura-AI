@@ -99,22 +99,30 @@ let acct = "", bal = 0n;
 const pad = h => h.replace(/^0x/, "").toLowerCase().padStart(64, "0");
 const ethereum = window.ethereum || window.trustwallet || null;
 
+const any = ps => new Promise((res, rej) => {
+  let n = ps.length, first;
+  ps.forEach(p => p.then(res, e => { first = first || e; if (--n === 0) rej(first); }));
+});
+function oneNode(u, body) {
+  const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 7000);
+  return fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: ctl.signal })
+    .then(r => r.json())
+    .then(j => {
+      if (!Array.isArray(j)) throw new Error((j && j.error && j.error.message) || "Respons node tidak valid");
+      return j;
+    })
+    .finally(() => clearTimeout(timer));
+}
+// Semua panggilan dikirim sekaligus dalam 1 request ke semua node; node tercepat yang dipakai.
+async function rpcBatch(calls) {
+  const body = calls.map((c, i) => ({ jsonrpc: "2.0", id: i + 1, method: c.method, params: c.params }));
+  const res = await any(CFG.RPC.map(u => oneNode(u, body)));
+  return body.map(b => res.find(r => r.id === b.id) || { error: { message: "Tidak ada respons" } });
+}
 async function rpc(method, params) {
-  let last;
-  for (const u of CFG.RPC) {
-    try {
-      const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 4000);
-      let r;
-      try {
-        r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, signal: ctl.signal,
-          body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
-      } finally { clearTimeout(timer); }
-      const j = await r.json();
-      if (j.error) throw new Error(j.error.message);
-      return j.result;
-    } catch (e) { last = e; }
-  }
-  throw last;
+  const r = (await rpcBatch([{ method, params }]))[0];
+  if (r.error) throw new Error(r.error.message);
+  return r.result;
 }
 const call = data => rpc("eth_call", [{ to: CFG.TOKEN, data }, "latest"]);
 
@@ -145,23 +153,36 @@ function say(el, text, cls, link) {
 }
 const short = a => a.slice(0, 6) + "…" + a.slice(-4);
 
+const CK = "aura_tk_v1";
+function render(d) {
+  tk.name = d.name; tk.symbol = d.symbol; tk.dec = d.dec; tk.supply = BigInt(d.supply);
+  $("tName").textContent = tk.name;
+  $("tSupply").firstChild.textContent = fmt(tk.supply, tk.dec);
+  $("tSym").textContent = tk.symbol; $("tSym2").textContent = tk.symbol; $("tDec").textContent = tk.dec;
+  $("tOwn").textContent = d.owner;
+  document.title = tk.name + " dApp";
+}
 async function loadToken() {
   if (!OK) { $("cfgWarn").hidden = false; return; }
   $("tAddr").textContent = short(CFG.TOKEN);
   $("scanBtn").href = CFG.EXPLORER + "/token/" + CFG.TOKEN;
+  try { const c = JSON.parse(localStorage.getItem(CK) || "null"); if (c) render(c); } catch (e) {}
   try {
-    const [n, s, d, t, o] = await Promise.all([
-      call("0x06fdde03"), call("0x95d89b41"), call("0x313ce567"), call("0x18160ddd"),
-      call("0x8da5cb5b").catch(() => null)
-    ]);
-    tk.name = decodeStr(n); tk.symbol = decodeStr(s); tk.dec = parseInt(d, 16); tk.supply = BigInt(t);
-    $("tName").textContent = tk.name;
-    $("tSupply").firstChild.textContent = fmt(tk.supply, tk.dec);
-    $("tSym").textContent = tk.symbol; $("tSym2").textContent = tk.symbol; $("tDec").textContent = tk.dec;
-    document.title = tk.name + " dApp";
-    if (o === null) $("tOwn").textContent = "Tidak tersedia";
-    else $("tOwn").textContent = /^0x0+$/.test(o) ? "Sudah dilepas (renounced)" : short("0x" + o.slice(-40));
-  } catch (e) { $("tSupply").firstChild.textContent = "Gagal memuat"; }
+    const q = d => ({ method: "eth_call", params: [{ to: CFG.TOKEN, data: d }, "latest"] });
+    const r = await rpcBatch([q("0x06fdde03"), q("0x95d89b41"), q("0x313ce567"), q("0x18160ddd"), q("0x8da5cb5b")]);
+    if (r.slice(0, 4).some(x => x.error || !x.result)) throw new Error("data token tidak lengkap");
+    const o = r[4].error ? null : r[4].result;
+    const d = {
+      name: decodeStr(r[0].result), symbol: decodeStr(r[1].result), dec: parseInt(r[2].result, 16),
+      supply: BigInt(r[3].result).toString(),
+      owner: o === null ? "Tidak tersedia" : /^0x0+$/.test(o) ? "Sudah dilepas (renounced)" : short("0x" + o.slice(-40))
+    };
+    render(d);
+    try { localStorage.setItem(CK, JSON.stringify(d)); } catch (e) {}
+  } catch (e) {
+    if ($("tSupply").firstChild.textContent === "…") $("tSupply").firstChild.textContent = "Gagal memuat";
+    setTimeout(loadToken, 5000); // coba lagi otomatis
+  }
 }
 
 async function refreshBal() {
@@ -239,8 +260,15 @@ $("addBtn").onclick = async () => {
 
 if (ethereum) {
   $("connBtn").onclick = connect;
-  ethereum.on && ethereum.on("accountsChanged", () => location.reload());
-  ethereum.on && ethereum.on("chainChanged", () => location.reload());
+  ethereum.on && ethereum.on("accountsChanged", a => {
+    if (!acct) return;
+    if (!a || !a[0]) {
+      acct = ""; bal = 0n;
+      $("wAcct").textContent = "Belum terhubung"; $("wBal").textContent = "-";
+      $("connBtn").hidden = false; $("addBtn").hidden = true; $("sendCard").hidden = true;
+    } else { acct = a[0]; $("wAcct").textContent = short(acct); refreshBal(); }
+  });
+  ethereum.on && ethereum.on("chainChanged", () => { if (acct) refreshBal(); });
 } else {
   $("connBtn").onclick = () => say($("wMsg"), "Dompet tidak terdeteksi. Buka halaman ini lewat browser di dalam aplikasi MetaMask atau Trust Wallet, atau ketuk tombol di bawah.", "er");
   $("mmLink").hidden = false;
