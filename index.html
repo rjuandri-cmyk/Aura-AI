@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Aura AI dApp</title>
+<meta name="description" content="dApp token Aura AI di BNB Smart Chain: data token, saldo, dan kirim token.">
+<meta name="theme-color" content="#120f1d">
+<style>
+:root{--bg:#120f1d;--card:#1b1729;--line:#2e2745;--tx:#ece9f7;--mut:#9a93b5;--ac:#9b7bff;--glow:#3fd0c0;--ok:#4ade80;--er:#f87171}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+main{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+.hero{padding:34px 0 26px;text-align:center;background:radial-gradient(ellipse 70% 60% at 50% 40%,rgba(155,123,255,.28),rgba(63,208,192,.10) 60%,transparent 80%)}
+.hero h1{margin:0;font:600 30px/1.1 Georgia,"Iowan Old Style",serif}
+.hero p{margin:6px 0 0;color:var(--mut)}
+.big{font:600 40px/1.1 Georgia,"Iowan Old Style",serif;letter-spacing:-.01em;margin-top:18px;word-break:break-all}
+.big small{font-size:16px;color:var(--mut);font-weight:400;margin-left:6px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:14px}
+h2{margin:0 0 10px;font-size:17px}
+.row{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row span:first-child{color:var(--mut)}
+.row span:last-child{text-align:right;word-break:break-all}
+label{display:block;margin:12px 0 6px;color:var(--mut);font-size:14px}
+input{width:100%;padding:13px;border-radius:12px;border:1px solid var(--line);background:#120f1d;color:var(--tx);font-size:16px}
+input:focus,button:focus-visible,a:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+.amt{display:flex;gap:8px}
+button,.btn{display:block;width:100%;margin-top:12px;padding:13px;border:0;border-radius:12px;background:var(--ac);color:#140f26;font:600 16px system-ui;text-align:center;text-decoration:none;cursor:pointer}
+button.alt,.btn.alt{background:transparent;color:var(--tx);border:1px solid var(--line)}
+.amt button{width:auto;margin:0;padding:0 16px}
+button:disabled{opacity:.5;cursor:not-allowed}
+.msg{margin-top:12px;font-size:14px;min-height:20px;word-break:break-word}
+.ok{color:var(--ok)}.er{color:var(--er)}
+.warn{background:#2a2113;border:1px solid #5b4720;color:#f3d28b;border-radius:12px;padding:12px;margin-top:14px;font-size:14px}
+[hidden]{display:none!important}
+.foot{margin-top:24px;text-align:center;color:var(--mut);font-size:13px}
+@media (prefers-reduced-motion:no-preference){button{transition:filter .15s}button:hover:not(:disabled){filter:brightness(1.1)}}
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <h1 id="tName">Aura AI</h1>
+    <p>Token di BNB Smart Chain</p>
+    <div class="big" id="tSupply">…<small id="tSym"></small></div>
+    <p>total suplai</p>
+  </section>
+
+  <div class="warn" id="cfgWarn" hidden>Alamat kontrak belum diisi. Buka <b>index.html</b>, cari <b>TOKEN</b> di bagian CONFIG, lalu ganti dengan alamat kontrak Aura AI (0x…).</div>
+
+  <section class="card">
+    <h2>Data token</h2>
+    <div class="row"><span>Kontrak</span><span id="tAddr">-</span></div>
+    <div class="row"><span>Simbol</span><span id="tSym2">-</span></div>
+    <div class="row"><span>Desimal</span><span id="tDec">-</span></div>
+    <div class="row"><span>Pemilik kontrak</span><span id="tOwn">-</span></div>
+    <button class="alt" id="copyBtn" type="button">Salin alamat kontrak</button>
+    <a class="btn alt" id="scanBtn" href="#" target="_blank" rel="noopener noreferrer">Lihat di BscScan</a>
+  </section>
+
+  <section class="card">
+    <h2>Dompet saya</h2>
+    <div class="row"><span>Akun</span><span id="wAcct">Belum terhubung</span></div>
+    <div class="row"><span>Saldo</span><span id="wBal">-</span></div>
+    <button id="connBtn" type="button">Hubungkan dompet</button>
+    <a class="btn alt" id="mmLink" href="#" hidden>Buka di MetaMask</a>
+    <button class="alt" id="addBtn" type="button" hidden>Tambahkan token ke dompet</button>
+    <div class="msg" id="wMsg" role="status" aria-live="polite"></div>
+  </section>
+
+  <section class="card" id="sendCard" hidden>
+    <h2>Kirim token</h2>
+    <label for="to">Alamat tujuan</label>
+    <input id="to" placeholder="0x…" autocomplete="off" autocapitalize="off" spellcheck="false">
+    <label for="amt">Jumlah</label>
+    <div class="amt"><input id="amt" inputmode="decimal" placeholder="0.0" autocomplete="off"><button class="alt" id="maxBtn" type="button">Maks</button></div>
+    <button id="sendBtn" type="button">Kirim</button>
+    <div class="msg" id="sMsg" role="status" aria-live="polite"></div>
+  </section>
+
+  <p class="foot">Transaksi blockchain tidak bisa dibatalkan. Periksa alamat tujuan sebelum mengirim.</p>
+</main>
+
+<script>
+/* ===== CONFIG ===== */
+const CFG = {
+  TOKEN: "0xa290cb07d40df6c9da3f7a978c6db29623dda9cd", // kontrak Aura AI (BSC)
+  RPC: ["https://bsc-dataseed.binance.org", "https://bsc-dataseed1.defibit.io"],
+  EXPLORER: "https://bscscan.com"
+};
+/* ================== */
+const $ = id => document.getElementById(id);
+const OK = /^0x[0-9a-fA-F]{40}$/.test(CFG.TOKEN);
+const tk = { name: "Aura AI", symbol: "AURA", dec: 18, supply: 0n };
+let acct = "", bal = 0n;
+
+const pad = h => h.replace(/^0x/, "").toLowerCase().padStart(64, "0");
+const ethereum = window.ethereum;
+
+async function rpc(method, params) {
+  let last;
+  for (const u of CFG.RPC) {
+    try {
+      const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
+      const j = await r.json();
+      if (j.error) throw new Error(j.error.message);
+      return j.result;
+    } catch (e) { last = e; }
+  }
+  throw last;
+}
+const call = data => rpc("eth_call", [{ to: CFG.TOKEN, data }, "latest"]);
+
+function decodeStr(h) {
+  h = h.slice(2);
+  if (h.length === 64) return h.match(/../g).map(b => String.fromCharCode(parseInt(b, 16))).join("").replace(/\0/g, "");
+  const len = parseInt(h.slice(64, 128), 16);
+  const bytes = new Uint8Array((h.slice(128, 128 + len * 2).match(/../g) || []).map(b => parseInt(b, 16)));
+  return new TextDecoder().decode(bytes);
+}
+function fmt(v, d, full) {
+  let s = v.toString().padStart(d + 1, "0");
+  let i = d ? s.slice(0, -d) : s, f = d ? s.slice(-d).replace(/0+$/, "") : "";
+  if (!full) f = f.slice(0, 4);
+  if (!full) i = i.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  return f ? i + (full ? "." : ",") + f : i;
+}
+function parse(str, d) {
+  str = str.trim().replace(",", ".");
+  if (!/^\d+(\.\d+)?$/.test(str)) throw new Error("Jumlah tidak valid.");
+  const p = str.split("."), f = p[1] || "";
+  if (f.length > d) throw new Error("Maksimal " + d + " angka di belakang titik.");
+  return BigInt(p[0] + f.padEnd(d, "0"));
+}
+function say(el, text, cls, link) {
+  el.className = "msg " + (cls || ""); el.textContent = text;
+  if (link) { el.append(" "); const a = document.createElement("a"); a.href = link; a.target = "_blank"; a.rel = "noopener noreferrer"; a.style.color = "inherit"; a.textContent = "Lihat transaksi"; el.append(a); }
+}
+const short = a => a.slice(0, 6) + "…" + a.slice(-4);
+
+async function loadToken() {
+  if (!OK) { $("cfgWarn").hidden = false; return; }
+  $("tAddr").textContent = short(CFG.TOKEN);
+  $("scanBtn").href = CFG.EXPLORER + "/token/" + CFG.TOKEN;
+  try {
+    const [n, s, d, t, o] = await Promise.all([
+      call("0x06fdde03"), call("0x95d89b41"), call("0x313ce567"), call("0x18160ddd"),
+      call("0x8da5cb5b").catch(() => null)
+    ]);
+    tk.name = decodeStr(n); tk.symbol = decodeStr(s); tk.dec = parseInt(d, 16); tk.supply = BigInt(t);
+    $("tName").textContent = tk.name;
+    $("tSupply").firstChild.textContent = fmt(tk.supply, tk.dec);
+    $("tSym").textContent = tk.symbol; $("tSym2").textContent = tk.symbol; $("tDec").textContent = tk.dec;
+    document.title = tk.name + " dApp";
+    if (o === null) $("tOwn").textContent = "Tidak tersedia";
+    else $("tOwn").textContent = /^0x0+$/.test(o) ? "Sudah dilepas (renounced)" : short("0x" + o.slice(-40));
+  } catch (e) { $("tSupply").firstChild.textContent = "Gagal memuat"; }
+}
+
+async function refreshBal() {
+  if (!acct || !OK) return;
+  try {
+    bal = BigInt(await call("0x70a08231" + pad(acct)));
+    $("wBal").textContent = fmt(bal, tk.dec) + " " + tk.symbol;
+  } catch (e) { $("wBal").textContent = "Gagal memuat"; }
+}
+
+async function ensureChain() {
+  try { await ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x38" }] }); }
+  catch (e) {
+    if (e.code !== 4902) throw e;
+    await ethereum.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0x38", chainName: "BNB Smart Chain",
+      nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 }, rpcUrls: [CFG.RPC[0]], blockExplorerUrls: [CFG.EXPLORER] }] });
+  }
+}
+
+async function connect() {
+  if (!OK) return say($("wMsg"), "Alamat kontrak belum diisi.", "er");
+  try {
+    const a = await ethereum.request({ method: "eth_requestAccounts" });
+    await ensureChain();
+    acct = a[0];
+    $("wAcct").textContent = short(acct);
+    $("connBtn").hidden = true; $("addBtn").hidden = false; $("sendCard").hidden = false;
+    say($("wMsg"), "Terhubung ke BNB Smart Chain.", "ok");
+    refreshBal();
+  } catch (e) { say($("wMsg"), e.code === 4001 ? "Koneksi dibatalkan." : "Gagal menghubungkan dompet.", "er"); }
+}
+
+async function send() {
+  const to = $("to").value.trim(), m = $("sMsg");
+  try {
+    if (!/^0x[0-9a-fA-F]{40}$/.test(to)) throw new Error("Alamat tujuan tidak valid.");
+    if (to.toLowerCase() === CFG.TOKEN.toLowerCase()) throw new Error("Jangan kirim token ke alamat kontraknya sendiri.");
+    const v = parse($("amt").value, tk.dec);
+    if (v <= 0n) throw new Error("Jumlah harus lebih dari 0.");
+    if (v > bal) throw new Error("Saldo tidak cukup.");
+    await ensureChain();
+    $("sendBtn").disabled = true; say(m, "Konfirmasi di dompet Anda…");
+    const hash = await ethereum.request({ method: "eth_sendTransaction", params: [{ from: acct, to: CFG.TOKEN,
+      data: "0xa9059cbb" + pad(to) + v.toString(16).padStart(64, "0") }] });
+    say(m, "Transaksi terkirim.", "ok", CFG.EXPLORER + "/tx/" + hash);
+    $("amt").value = "";
+    setTimeout(refreshBal, 6000); setTimeout(refreshBal, 20000);
+  } catch (e) { say(m, e.code === 4001 ? "Dibatalkan." : (e.message || "Gagal mengirim."), "er"); }
+  $("sendBtn").disabled = false;
+}
+
+$("copyBtn").onclick = async () => {
+  if (!OK) return;
+  try { await navigator.clipboard.writeText(CFG.TOKEN); $("copyBtn").textContent = "Tersalin ✓"; }
+  catch (e) { $("copyBtn").textContent = CFG.TOKEN; }
+  setTimeout(() => { $("copyBtn").textContent = "Salin alamat kontrak"; }, 2500);
+};
+$("maxBtn").onclick = () => { $("amt").value = fmt(bal, tk.dec, true); };
+$("sendBtn").onclick = send;
+$("addBtn").onclick = async () => {
+  try { await ethereum.request({ method: "wallet_watchAsset", params: { type: "ERC20", options: { address: CFG.TOKEN, symbol: tk.symbol.slice(0, 11), decimals: tk.dec } } }); }
+  catch (e) { say($("wMsg"), "Gagal menambahkan token.", "er"); }
+};
+
+if (ethereum) {
+  $("connBtn").onclick = connect;
+  ethereum.on && ethereum.on("accountsChanged", () => location.reload());
+  ethereum.on && ethereum.on("chainChanged", () => location.reload());
+} else {
+  $("connBtn").onclick = () => say($("wMsg"), "Dompet tidak terdeteksi. Buka halaman ini lewat browser di dalam aplikasi MetaMask atau Trust Wallet.", "er");
+  $("mmLink").hidden = false;
+  $("mmLink").href = "https://metamask.app.link/dapp/" + location.host + location.pathname;
+}
+loadToken();
+</script>
+</body>
+</html>
